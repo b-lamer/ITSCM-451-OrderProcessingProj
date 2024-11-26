@@ -1,0 +1,447 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Order Phones</title>
+    <style>
+        /* Previous styles remain the same */
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 900px;
+            margin: 20px auto;
+            padding: 20px;
+            display: grid;
+            grid-template-columns: 1fr 300px;
+            gap: 20px;
+        }
+        .main-content {
+            padding-right: 20px;
+        }
+        .cart-sidebar {
+            background-color: #f8f9fa;
+            padding: 20px;
+            border-radius: 8px;
+            position: sticky;
+            top: 20px;
+            max-height: calc(100vh - 40px);
+            overflow-y: auto;
+        }
+        .form-group {
+            margin-bottom: 15px;
+        }
+        label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: bold;
+        }
+        input, select {
+            width: 100%;
+            padding: 8px;
+            margin-bottom: 10px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+        }
+        select {
+            background-color: white;
+        }
+        select:disabled {
+            background-color: #f5f5f5;
+        }
+        button {
+            padding: 10px 20px;
+            background-color: #007bff;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+        button:disabled {
+            background-color: #cccccc;
+            cursor: not-allowed;
+        }
+        button.delete-btn {
+            background-color: #dc3545;
+            padding: 5px 10px;
+            font-size: 0.8em;
+        }
+        button.checkout-btn {
+            background-color: #28a745;
+            width: 100%;
+            margin-top: 10px;
+        }
+        .error {
+            color: red;
+            margin-top: 10px;
+            padding: 10px;
+            background-color: #fff0f0;
+            border-radius: 4px;
+        }
+        .success {
+            color: green;
+            margin-top: 10px;
+            padding: 10px;
+            background-color: #f0fff0;
+            border-radius: 4px;
+        }
+        .debug-info {
+            margin-top: 20px;
+            padding: 10px;
+            background-color: #f5f5f5;
+            border-radius: 4px;
+            font-family: monospace;
+            white-space: pre-wrap;
+            word-break: break-all;
+            grid-column: 1 / -1;
+        }
+        .selected-product {
+            margin-top: 10px;
+            padding: 10px;
+            background-color: #e9ecef;
+            border-radius: 4px;
+            font-size: 0.9em;
+        }
+        .price-display {
+            font-size: 1.2em;
+            font-weight: bold;
+            color: #28a745;
+            margin: 10px 0;
+        }
+        .price-breakdown {
+            font-size: 0.9em;
+            color: #666;
+            margin-top: 5px;
+        }
+        .cart-item {
+            border-bottom: 1px solid #ddd;
+            padding: 10px 0;
+            margin-bottom: 10px;
+        }
+        .cart-item:last-child {
+            border-bottom: none;
+        }
+        .cart-empty {
+            text-align: center;
+            color: #666;
+            padding: 20px 0;
+        }
+        .cart-total {
+            font-weight: bold;
+            margin-top: 10px;
+            padding-top: 10px;
+            border-top: 2px solid #ddd;
+        }
+        .cart-subtotal {
+            font-size: 0.9em;
+            color: #666;
+            margin-top: 5px;
+        }
+        @media (max-width: 768px) {
+            body {
+                grid-template-columns: 1fr;
+            }
+            .main-content {
+                padding-right: 0;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="main-content">
+        <!-- Previous HTML structure remains largely the same -->
+        <h1>Order Phones</h1>
+        <form id="orderForm">
+            <div class="form-group">
+                <label for="phoneModel">Phone Model:</label>
+                <select id="phoneModel" required>
+                    <option value="">Select a phone model</option>
+                    <option value="iPhone" data-base-price="999">iPhone ($999)</option>
+                    <option value="Samsung" data-base-price="999">Samsung ($999)</option>
+                    <option value="Pixel" data-base-price="899">Pixel ($899)</option>
+                </select>
+            </div>
+            
+            <div class="form-group">
+                <label for="storageSize">Storage Size:</label>
+                <select id="storageSize" required disabled>
+                    <option value="">Select storage size</option>
+                    <option value="64GB" data-price-increase="0">64 GB (Included)</option>
+                    <option value="128GB" data-price-increase="100">128 GB (+$100)</option>
+                    <option value="256GB" data-price-increase="200">256 GB (+$200)</option>
+                </select>
+            </div>
+
+            <div class="form-group">
+                <label for="color">Color:</label>
+                <select id="color" required>
+                    <option value="">Select a color</option>
+                    <option value="Blue" data-color="#0066cc">Blue</option>
+                    <option value="Red" data-color="#cc0000">Red</option>
+                    <option value="White" data-color="#ffffff">White</option>
+                    <option value="Black" data-color="#000000">Black</option>
+                    <option value="RoseGold" data-color="#b76e79">Rose Gold</option>
+                </select>
+            </div>
+
+            <div id="selectedProduct" class="selected-product" style="display: none;">
+                Selected Product: <span id="productIdDisplay"></span>
+                <br>
+                Selected Color: <span id="colorDisplay"></span>
+                <div id="priceDisplay" class="price-display"></div>
+                <div id="priceBreakdown" class="price-breakdown"></div>
+            </div>
+            
+            <div class="form-group">
+                <label for="quantity">Quantity:</label>
+                <input type="number" id="quantity" required min="1" disabled>
+            </div>
+            
+            <button type="submit" id="addToCartButton" disabled>Add to Cart</button>
+        </form>
+        <div id="message"></div>
+    </div>
+
+    <div class="cart-sidebar">
+        <h2>Shopping Cart</h2>
+        <div id="cartItems"></div>
+        <button id="checkoutButton" class="checkout-btn" disabled>Checkout</button>
+    </div>
+
+    <div id="debugInfo" class="debug-info"></div>
+
+    <script>
+        // Cart state
+        let cart = [];
+        
+        // Pricing logic
+        function calculatePrice(model, storage) {
+            const basePrice = model ? parseInt(phoneModelSelect.querySelector(`option[value="${model}"]`).dataset.basePrice) : 0;
+            const storageIncrease = storage ? parseInt(storageSizeSelect.querySelector(`option[value="${storage}"]`).dataset.priceIncrease) : 0;
+            return basePrice + storageIncrease;
+        }
+
+        function formatPrice(price) {
+            return '$' + price.toLocaleString();
+        }
+        
+        // Get DOM elements
+        const form = document.getElementById('orderForm');
+        const phoneModelSelect = document.getElementById('phoneModel');
+        const storageSizeSelect = document.getElementById('storageSize');
+        const colorSelect = document.getElementById('color');
+        const quantityInput = document.getElementById('quantity');
+        const addToCartButton = document.getElementById('addToCartButton');
+        const checkoutButton = document.getElementById('checkoutButton');
+        const selectedProduct = document.getElementById('selectedProduct');
+        const productIdDisplay = document.getElementById('productIdDisplay');
+        const colorDisplay = document.getElementById('colorDisplay');
+        const priceDisplay = document.getElementById('priceDisplay');
+        const priceBreakdown = document.getElementById('priceBreakdown');
+        const cartItems = document.getElementById('cartItems');
+        
+        // Enable/disable controls and update price
+        function updatePrice() {
+            const model = phoneModelSelect.value;
+            const storage = storageSizeSelect.value;
+            if (model && storage) {
+                const basePrice = parseInt(phoneModelSelect.querySelector(`option[value="${model}"]`).dataset.basePrice);
+                const storageIncrease = parseInt(storageSizeSelect.querySelector(`option[value="${storage}"]`).dataset.priceIncrease);
+                const totalPrice = basePrice + storageIncrease;
+                
+                priceDisplay.textContent = `Total: ${formatPrice(totalPrice)}`;
+                priceBreakdown.innerHTML = `
+                    Base Price: ${formatPrice(basePrice)}<br>
+                    Storage Upgrade: ${storageIncrease ? '+' + formatPrice(storageIncrease) : 'Included'}
+                `;
+            } else {
+                priceDisplay.textContent = '';
+                priceBreakdown.textContent = '';
+            }
+        }
+
+        phoneModelSelect.addEventListener('change', function() {
+            storageSizeSelect.disabled = !this.value;
+            if (!this.value) {
+                storageSizeSelect.value = '';
+                updateProductDisplay();
+            }
+            updatePrice();
+        });
+
+        storageSizeSelect.addEventListener('change', function() {
+            quantityInput.disabled = !this.value;
+            if (!this.value) {
+                quantityInput.value = '';
+            }
+            updateProductDisplay();
+            updatePrice();
+        });
+
+        colorSelect.addEventListener('change', updateProductDisplay);
+
+        quantityInput.addEventListener('input', function() {
+            addToCartButton.disabled = !this.value || this.value < 1;
+        });
+
+        // Update product display
+        function updateProductDisplay() {
+            const phoneModel = phoneModelSelect.value;
+            const storageSize = storageSizeSelect.value;
+            const color = colorSelect.value;
+            
+            if (phoneModel && storageSize) {
+                const productId = phoneModel + storageSize;
+                productIdDisplay.textContent = productId;
+                
+                if (color) {
+                    const colorOption = colorSelect.selectedOptions[0];
+                    const colorHex = colorOption.getAttribute('data-color');
+                    colorDisplay.innerHTML = `
+                        <span class="color-preview" style="background-color: ${colorHex}"></span>
+                        ${color}
+                    `;
+                } else {
+                    colorDisplay.textContent = 'No color selected';
+                }
+                
+                selectedProduct.style.display = 'block';
+                updatePrice();
+            } else {
+                selectedProduct.style.display = 'none';
+            }
+        }
+
+        // Render cart
+        function renderCart() {
+            if (cart.length === 0) {
+                cartItems.innerHTML = '<div class="cart-empty">Cart is empty</div>';
+                checkoutButton.disabled = true;
+                return;
+            }
+
+            let cartHtml = '';
+            let totalPrice = 0;
+
+            cart.forEach((item, index) => {
+                const itemPrice = calculatePrice(item.model, item.storage);
+                const itemTotal = itemPrice * item.quantity;
+                totalPrice += itemTotal;
+
+                const colorHex = document.querySelector(`option[value="${item.color}"]`).getAttribute('data-color');
+                cartHtml += `
+                    <div class="cart-item">
+                        <div><strong>${item.productId}</strong></div>
+                        <div>
+                            <span class="color-preview" style="background-color: ${colorHex}"></span>
+                            ${item.color}
+                        </div>
+                        <div>Quantity: ${item.quantity}</div>
+                        <div class="cart-subtotal">
+                            Price: ${formatPrice(itemPrice)} x ${item.quantity} = ${formatPrice(itemTotal)}
+                        </div>
+                        <button onclick="removeFromCart(${index})" class="delete-btn">Remove</button>
+                    </div>
+                `;
+            });
+
+            cartHtml += `
+                <div class="cart-total">
+                    <div>Total Items: ${cart.reduce((sum, item) => sum + item.quantity, 0)}</div>
+                    <div>Total Price: ${formatPrice(totalPrice)}</div>
+                </div>
+            `;
+
+            cartItems.innerHTML = cartHtml;
+            checkoutButton.disabled = false;
+        }
+
+        function removeFromCart(index) {
+            cart.splice(index, 1);
+            renderCart();
+        }
+
+        // Add to cart form submission
+        form.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            
+            const model = phoneModelSelect.value;
+            const storage = storageSizeSelect.value;
+            const productId = model + storage;
+            const quantity = parseInt(quantityInput.value);
+            const color = colorSelect.value;
+            const price = calculatePrice(model, storage);
+
+            cart.push({
+                productId,
+                model,
+                storage,
+                quantity,
+                color,
+                price
+            });
+
+            renderCart();
+
+            form.reset();
+            storageSizeSelect.disabled = true;
+            quantityInput.disabled = true;
+            addToCartButton.disabled = true;
+            selectedProduct.style.display = 'none';
+
+            const messageDiv = document.getElementById('message');
+            messageDiv.className = 'success';
+            messageDiv.textContent = 'Item added to cart successfully!';
+            setTimeout(() => {
+                messageDiv.textContent = '';
+            }, 3000);
+        });
+
+        // Checkout process
+        checkoutButton.addEventListener('click', async () => {
+            const messageDiv = document.getElementById('message');
+            const debugInfo = document.getElementById('debugInfo');
+            
+            messageDiv.className = '';
+            messageDiv.textContent = 'Processing checkout...';
+            debugInfo.textContent = '';
+
+            try {
+                for (const item of cart) {
+                    const response = await fetch('https://u1gir1ouw7.execute-api.us-east-1.amazonaws.com/prod/check-stock', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                        },
+                        body: JSON.stringify({
+                            productId: item.productId,
+                            quantity: item.quantity
+                        })
+                    });
+
+                    const responseData = await response.json();
+                    
+                    let data = responseData;
+                    if (responseData.body && typeof responseData.body === 'string') {
+                        data = JSON.parse(responseData.body);
+                    }
+
+                    if (!data.success) {
+                        throw new Error(`Failed to process ${item.productId}: ${data.message}`);
+                    }
+                }
+
+                messageDiv.className = 'success';
+                messageDiv.textContent = 'Order placed successfully!';
+                cart = [];
+                renderCart();
+                
+            } catch (error) {
+                messageDiv.className = 'error';
+                messageDiv.textContent = `Error: ${error.message}`;
+                console.error('Error details:', error);
+            }
+        });
+
+        // Initial cart render
+        renderCart();
+    </script>
+</body>
+</html>
