@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Order Phones</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <div class="main-content">
+        <h1>Order Phones</h1>
+        
+        <div class="form-group">
+            <label for="phoneModel">Phone Model:</label>
+            <select id="phoneModel">
+                <option value="">Select a phone model</option>
+                <option value="iPhone">iPhone ($999)</option>
+                <option value="Samsung">Samsung ($999)</option>
+                <option value="Pixel">Pixel ($899)</option>
+            </select>
+        </div>
+
+        <div class="form-group">
+            <label for="storage">Storage Size:</label>
+            <select id="storage">
+                <option value="">Select storage size</option>
+                <option value="64">64 GB (Included)</option>
+                <option value="128">128 GB (+$100)</option>
+                <option value="256">256 GB (+$200)</option>
+            </select>
+        </div>
+
+        <div class="form-group">
+            <label for="color">Color:</label>
+            <select id="color">
+                <option value="">Select a color</option>
+                <option value="Blue">Blue</option>
+                <option value="Red">Red</option>
+                <option value="White">White</option>
+                <option value="Black">Black</option>
+                <option value="Rose Gold">Rose Gold</option>
+            </select>
+        </div>
+
+        <div id="selectedProduct" class="selected-product">
+            <p>Selected Product: <span id="productIdDisplay"></span></p>
+            <p>Selected Color: <span id="colorDisplay"></span></p>
+            <div id="priceDisplay" class="price-display"></div>
+            <div id="priceBreakdown" class="price-breakdown"></div>
+        </div>
+
+        <div class="form-group">
+            <label for="quantity">Quantity:</label>
+            <input type="number" id="quantity" min="1" value="1">
+        </div>
+
+        <button id="addToCart">Add to Cart</button>
+        <div id="message"></div>
+    </div>
+
+    <div class="cart-sidebar">
+        <h2>Shopping Cart</h2>
+        <div id="cartItems"></div>
+        <button id="checkout">Checkout</button>
+    </div>
+
+    <div id="debugInfo" class="debug-info"></div>
+
+    <script src="script.js"></script>
+</body>
+</html>
