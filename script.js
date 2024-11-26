@@ -34,32 +34,9 @@ colorSelect.addEventListener('change', updateProductDisplay);
 document.getElementById('addToCart').addEventListener('click', addToCart);
 document.getElementById('checkout').addEventListener('click', checkout);
 
-// Functions
-function updateProductDisplay() {
-    const model = phoneModelSelect.value;
-    const storage = storageSelect.value;
-    const color = colorSelect.value;
-
-    if (model && storage && color) {
-        const basePrice = BASE_PRICES[model];
-        const storagePrice = STORAGE_PRICES[storage];
-        const totalPrice = basePrice + storagePrice;
-
-        selectedProduct.style.display = 'block';
-        productIdDisplay.textContent = `${model} ${storage}GB`;
-        colorDisplay.textContent = color;
-        priceDisplay.textContent = `Total Price: $${totalPrice}`;
-        priceBreakdown.innerHTML = `
-            Base Price: $${basePrice}<br>
-            Storage Upgrade: +$${storagePrice}
-        `;
-    } else {
-        selectedProduct.style.display = 'none';
-    }
-}
-
 async function checkStock(productId) {
     try {
+        console.log('Checking stock for:', productId);
         const response = await fetch(API_ENDPOINT, {
             method: 'POST',
             headers: {
@@ -70,12 +47,17 @@ async function checkStock(productId) {
             })
         });
 
+        console.log('Response status:', response.status);
+        
         if (!response.ok) {
             throw new Error('Network response was not ok');
         }
 
         const data = await response.json();
-        return data.stock > 0;
+        console.log('Stock check response:', data);
+        
+        // Return true if stock exists and is greater than 0
+        return data && data.Stock > 0; // Changed from data.stock to data.Stock to match DynamoDB attribute
     } catch (error) {
         console.error('Error checking stock:', error);
         return false;
@@ -93,11 +75,15 @@ async function addToCart() {
         return;
     }
 
+    // Format ProductID to match DynamoDB format (e.g., iPhone64GB)
     const productId = `${model}${storage}GB`;
+    console.log('Checking stock for product:', productId);
+    
     const inStock = await checkStock(productId);
+    console.log('Stock check result:', inStock);
 
     if (!inStock) {
-        showMessage('Sorry, this product is out of stock.', 'error');
+        showMessage(`Sorry, ${model} ${storage}GB is out of stock.`, 'error');
         return;
     }
 
@@ -115,6 +101,8 @@ async function addToCart() {
     updateCartDisplay();
     showMessage('Product added to cart!', 'success');
 }
+
+
 
 function updateCartDisplay() {
     cartItems.innerHTML = cart.map(item => `
