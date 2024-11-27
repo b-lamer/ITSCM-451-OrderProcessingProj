@@ -64,6 +64,7 @@ body {
 }
 
 /* Buttons */
+
 button {
     background-color: #007bff;
     color: white;
@@ -71,15 +72,27 @@ button {
     padding: 10px 20px;
     border-radius: 4px;
     cursor: pointer;
+    transition: background-color 0.2s;
 }
 
 button:hover {
     background-color: #0056b3;
 }
 
+/* Updated Add to Cart button styles */
 #addToCart {
-    background-color: #ccc;
+    background-color: #007bff;  /* Changed from #ccc to match other buttons */
     margin-top: 10px;
+    width: 150px;  /* Set a fixed width */
+}
+
+#addToCart:hover {
+    background-color: #0056b3;
+}
+
+#addToCart:disabled {
+    background-color: #ccc;
+    cursor: not-allowed;
 }
 
 #checkout {
