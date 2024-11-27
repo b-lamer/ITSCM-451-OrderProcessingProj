@@ -33,11 +33,29 @@ phoneModelSelect.addEventListener('change', updateProductDisplay);
 storageSelect.addEventListener('change', updateProductDisplay);
 colorSelect.addEventListener('change', updateProductDisplay);
 document.getElementById('addToCart').addEventListener('click', addToCart);
-document.getElementById('checkout').addEventListener('click', checkout);
+document.getElementById('checkout').addEventListener('click', proceedToCheckout);
+
+
+function updateProductDisplay() {
+    const model = phoneModelSelect.value.split(' ')[0];
+    const storage = storageSelect.value.split(' ')[0];
+    const color = colorSelect.value;
+    
+    selectedProduct.style.display = 'block';
+    productIdDisplay.textContent = `${model} ${storage}GB`;
+    colorDisplay.textContent = color;
+    
+    const basePrice = BASE_PRICES[model];
+    const storagePrice = STORAGE_PRICES[storage];
+    const totalPrice = basePrice + storagePrice;
+    
+    priceDisplay.textContent = `$${totalPrice}`;
+    priceBreakdown.textContent = `Base Price: $${basePrice} + Storage Upgrade: $${storagePrice}`;
+}
 
 async function checkStock(productId) {
     try {
-        console.log('Checking stock for:', productId);
+        // Get current item from DynamoDB to check if it exists and has stock
         const response = await fetch(API_ENDPOINT, {
             method: 'POST',
             headers: {
@@ -45,21 +63,16 @@ async function checkStock(productId) {
             },
             body: JSON.stringify({
                 productId: productId,
-                quantity: 1  // Add this line - we're just checking if at least 1 is in stock
+                quantity: 0  // Just checking existence, not updating stock
             })
         });
 
-        console.log('Response status:', response.status);
-        
         if (!response.ok) {
             throw new Error('Network response was not ok');
         }
 
         const data = await response.json();
-        console.log('Stock check response:', data);
-        
-        // Return true if success is true
-        return data.success;
+        return data && data.success === true;
     } catch (error) {
         console.error('Error checking stock:', error);
         return false;
@@ -67,8 +80,8 @@ async function checkStock(productId) {
 }
 
 async function addToCart() {
-    const model = phoneModelSelect.value.split(' ')[0]; // Gets just "Samsung" from "Samsung ($999)"
-    const storage = storageSelect.value.split(' ')[0]; // Gets just "64" from "64 GB (Included)"
+    const model = phoneModelSelect.value.split(' ')[0];
+    const storage = storageSelect.value.split(' ')[0];
     const color = colorSelect.value;
     const quantity = parseInt(quantityInput.value);
 
@@ -77,15 +90,14 @@ async function addToCart() {
         return;
     }
 
-    // Format ProductID to match DynamoDB format (e.g., "Samsung64GB")
     const productId = `${model}${storage}GB`;
-    console.log('Checking stock for product:', productId); // Add this for debugging
+    console.log('Checking stock for product:', productId);
     
-    const inStock = await checkStock(productId);
-    console.log('Stock check result:', inStock); // Add this for debugging
+    const productExists = await checkStock(productId);
+    console.log('Stock check result:', productExists);
 
-    if (!inStock) {
-        showMessage(`Sorry, ${model} ${storage}GB is out of stock.`, 'error');
+    if (!productExists) {
+        showMessage(`Sorry, ${model} ${storage}GB is not available.`, 'error');
         return;
     }
 
@@ -104,8 +116,6 @@ async function addToCart() {
     showMessage('Product added to cart!', 'success');
 }
 
-
-
 function updateCartDisplay() {
     cartItems.innerHTML = cart.map(item => `
         <div class="cart-item">
@@ -119,13 +129,44 @@ function updateCartDisplay() {
     localStorage.setItem(STORAGE_KEY, JSON.stringify(cart));
 }
 
-function proceedToCheckout() {
+async function proceedToCheckout() {
     if (cart.length === 0) {
         showMessage('Your cart is empty.', 'error');
         return;
     }
-    
-    window.location.href = 'checkout.html';
+
+    try {
+        // Process each item in the cart
+        for (const item of cart) {
+            const response = await fetch(API_ENDPOINT, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                    productId: item.productId,
+                    quantity: item.quantity
+                })
+            });
+
+            if (!response.ok) {
+                throw new Error(`Failed to process ${item.productId}`);
+            }
+
+            const data = await response.json();
+            if (!data.success) {
+                showMessage(`Error: ${data.message}`, 'error');
+                return;
+            }
+        }
+
+        // If all items processed successfully, proceed to checkout page
+        window.location.href = 'checkout.html';
+        
+    } catch (error) {
+        console.error('Checkout error:', error);
+        showMessage('Error processing checkout. Please try again.', 'error');
+    }
 }
 
 function showMessage(text, type) {
