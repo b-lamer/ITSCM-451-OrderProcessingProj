@@ -160,21 +160,10 @@ async function proceedToCheckout() {
     }
 
     try {
-        // Final stock check before proceeding
-        for (const item of cart) {
-            const stockCheck = await checkStock(item.productId, item.quantity, true);
-            console.log(`Checkout stock check for ${item.productId}:`, stockCheck);
-
-            if (!stockCheck.success) {
-                showMessage(`Error: Insufficient stock for ${item.productId}`, 'error');
-                return;
-            }
-        }
-
         // Save cart to localStorage before redirecting
         localStorage.setItem(STORAGE_KEY, JSON.stringify(cart));
         
-        // If all items processed successfully, proceed to checkout page
+        // Proceed to checkout page without updating inventory yet
         window.location.href = 'checkout.html';
         
     } catch (error) {
