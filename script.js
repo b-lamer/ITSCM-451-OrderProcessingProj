@@ -83,6 +83,8 @@ async function checkStock(productId, requestedQuantity, updateInventory = false)
 }
 
 async function addToCart() {
+    console.log('addToCart function called');
+    
     const model = phoneModelSelect.value.split(' ')[0];
     const storage = storageSelect.value.split(' ')[0];
     const color = colorSelect.value;
@@ -99,21 +101,38 @@ async function addToCart() {
     const stockCheck = await checkStock(productId, quantity);
     console.log('Stock check result:', stockCheck);
 
+    // Calculate total requested quantity including what's already in cart
+    const existingCartItem = cart.find(item => item.productId === productId);
+    const totalRequestedQuantity = (existingCartItem ? existingCartItem.quantity : 0) + quantity;
+
+    // Check if we have enough stock
+    if (totalRequestedQuantity > stockCheck.currentStock) {
+        showMessage(`Sorry, insufficient stock. Available: ${stockCheck.currentStock}, Requested: ${totalRequestedQuantity}`, 'error');
+        return;
+    }
+
     if (!stockCheck.success) {
         showMessage(`Sorry, insufficient stock available. Current stock: ${stockCheck.currentStock}`, 'error');
         return;
     }
 
-    const basePrice = BASE_PRICES[model];
-    const storagePrice = STORAGE_PRICES[storage];
-    const totalPrice = (basePrice + storagePrice) * quantity;
+    if (existingCartItem) {
+        // Update quantity instead of adding new item
+        existingCartItem.quantity += quantity;
+        existingCartItem.price = (BASE_PRICES[model] + STORAGE_PRICES[storage]) * existingCartItem.quantity;
+    } else {
+        // Add new item
+        const basePrice = BASE_PRICES[model];
+        const storagePrice = STORAGE_PRICES[storage];
+        const totalPrice = (basePrice + storagePrice) * quantity;
 
-    cart.push({
-        productId,
-        color,
-        quantity,
-        price: totalPrice
-    });
+        cart.push({
+            productId,
+            color,
+            quantity,
+            price: totalPrice
+        });
+    }
 
     updateCartDisplay();
     showMessage('Product added to cart!', 'success');
