@@ -44,7 +44,8 @@ async function checkStock(productId) {
                 'Content-Type': 'application/json'
             },
             body: JSON.stringify({
-                productId: productId
+                productId: productId,
+                quantity: 1  // Add this line - we're just checking if at least 1 is in stock
             })
         });
 
@@ -57,8 +58,8 @@ async function checkStock(productId) {
         const data = await response.json();
         console.log('Stock check response:', data);
         
-        // Return true if stock exists and is greater than 0
-        return data && data.Stock > 0; // Changed from data.stock to data.Stock to match DynamoDB attribute
+        // Return true if success is true
+        return data.success;
     } catch (error) {
         console.error('Error checking stock:', error);
         return false;
