@@ -1,0 +1,30 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Order Confirmation</title>
+    <link rel="stylesheet" href="styles.css">
+    <link rel="stylesheet" href="checkout-styles.css">
+</head>
+<body>
+    <div class="checkout-container">
+        <div class="checkout-progress">
+            <div class="progress-step completed">Cart</div>
+            <div class="progress-step completed">Information</div>
+            <div class="progress-step completed">Payment</div>
+            <div class="progress-step completed">Confirmation</div>
+        </div>
+
+        <div class="checkout-content">
+            <div class="confirmation-message">
+                <h2>Thank You for Your Order!</h2>
+                <p>Your order has been successfully placed.</p>
+                <button onclick="window.location.href='index.html'" class="primary-button">
+                    Return to Store
+                </button>
+            </div>
+        </div>
+    </div>
+</body>
+</html>
