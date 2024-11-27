@@ -37,12 +37,16 @@ async function processPayment() {
         return;
     }
 
-    const cart = JSON.parse(localStorage.getItem(STORAGE_KEY)) || [];
-    
+    const cart = JSON.parse(localStorage.getItem('phoneShopCart')) || [];
+    if (cart.length === 0) {
+        alert('Your cart is empty');
+        return;
+    }
+
     try {
-        // Update inventory here
+        // Process each item in cart
         for (const item of cart) {
-            const response = await fetch(API_ENDPOINT, {
+            const response = await fetch('https://u1gir1ouw7.execute-api.us-east-1.amazonaws.com/prod/check-stock', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json'
@@ -65,15 +69,15 @@ async function processPayment() {
             }
         }
 
-        // Clear cart and stored info
-        localStorage.removeItem(STORAGE_KEY);
+        // Clear cart and stored info after successful processing
+        localStorage.removeItem('phoneShopCart');
         localStorage.removeItem('customerInfo');
 
-        // Redirect to confirmation page
+        // Redirect to confirmation
         window.location.href = 'confirmation.html';
     } catch (error) {
-        console.error('Error processing payment:', error);
-        alert('There was an error processing your order. Please try again.');
+        console.error('Payment processing error:', error);
+        alert('There was an error processing your payment. Please try again.');
     }
 }
 
