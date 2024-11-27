@@ -77,7 +77,7 @@ async function addToCart() {
     }
 
     // Format ProductID to match DynamoDB format (e.g., iPhone64GB)
-    const productId = `${model}${storage}GB`;
+    const productId = `${model.replace(/\s+/g, '')}${storage}GB`;
     console.log('Checking stock for product:', productId);
     
     const inStock = await checkStock(productId);
