@@ -1,6 +1,32 @@
+// Constants
+const API_ENDPOINT = 'https://u1gir1ouw7.execute-api.us-east-1.amazonaws.com/prod/check-stock';
+
 // Load cart and customer data from localStorage
-let cart = JSON.parse(localStorage.getItem('cart')) || [];
-let customerInfo = JSON.parse(localStorage.getItem('customerInfo')) || {};
+function updateOrderSummary() {
+    const cart = JSON.parse(localStorage.getItem('phoneShopCart')) || [];
+    const summaryItems = document.getElementById('summaryItems');
+    const summaryTotal = document.getElementById('summaryTotal');
+    let total = 0;
+
+    // Clear existing content
+    summaryItems.innerHTML = '';
+
+    // Add each cart item
+    cart.forEach(item => {
+        total += item.price;
+        const itemElement = document.createElement('div');
+        itemElement.className = 'summary-item';
+        itemElement.innerHTML = `
+            <p>${item.productId} - ${item.color}</p>
+            <p>Quantity: ${item.quantity}</p>
+            <p>$${item.price}</p>
+        `;
+        summaryItems.appendChild(itemElement);
+    });
+
+    // Update total
+    summaryTotal.textContent = `$${total}`;
+}
 
 function togglePaymentFields() {
     const method = document.getElementById('paymentMethod').value;
@@ -11,25 +37,6 @@ function togglePaymentFields() {
     paypalFields.style.display = method === 'paypal' ? 'block' : 'none';
 }
 
-function updateOrderSummary() {
-    const summaryItems = document.getElementById('summaryItems');
-    const summaryTotal = document.getElementById('summaryTotal');
-    let total = 0;
-
-    summaryItems.innerHTML = cart.map(item => {
-        total += item.price;
-        return `
-            <div class="summary-item">
-                <p>${item.productId} - ${item.color}</p>
-                <p>Quantity: ${item.quantity}</p>
-                <p>$${item.price}</p>
-            </div>
-        `;
-    }).join('');
-
-    summaryTotal.textContent = `$${total}`;
-}
-
 async function processPayment() {
     const form = document.getElementById('paymentForm');
     if (!form.checkValidity()) {
@@ -37,7 +44,29 @@ async function processPayment() {
         return;
     }
 
+    const method = document.getElementById('paymentMethod').value;
+    let paymentInfo = {
+        method: method
+    };
+
+    // Collect payment details based on method
+    if (method === 'credit' || method === 'debit') {
+        paymentInfo = {
+            ...paymentInfo,
+            cardNumber: document.getElementById('cardNumber').value,
+            expiryDate: document.getElementById('expiryDate').value,
+            cvv: document.getElementById('cvv').value
+        };
+    } else if (method === 'paypal') {
+        paymentInfo = {
+            ...paymentInfo,
+            paypalEmail: document.getElementById('paypalEmail').value
+        };
+    }
+
     const cart = JSON.parse(localStorage.getItem('phoneShopCart')) || [];
+    const customerInfo = JSON.parse(localStorage.getItem('customerInfo')) || {};
+
     if (cart.length === 0) {
         alert('Your cart is empty');
         return;
@@ -46,7 +75,7 @@ async function processPayment() {
     try {
         // Process each item in cart
         for (const item of cart) {
-            const response = await fetch('https://u1gir1ouw7.execute-api.us-east-1.amazonaws.com/prod/check-stock', {
+            const response = await fetch(API_ENDPOINT, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json'
@@ -69,6 +98,17 @@ async function processPayment() {
             }
         }
 
+        // Create final order object
+        const order = {
+            customerInfo,
+            cart,
+            paymentInfo,
+            orderDate: new Date().toISOString(),
+            orderStatus: 'completed'
+        };
+
+        console.log('Order processed:', order);
+
         // Clear cart and stored info after successful processing
         localStorage.removeItem('phoneShopCart');
         localStorage.removeItem('customerInfo');
@@ -82,4 +122,10 @@ async function processPayment() {
 }
 
 // Initialize page
-document.addEventListener('DOMContentLoaded', updateOrderSummary);
+document.addEventListener('DOMContentLoaded', () => {
+    updateOrderSummary();
+    const paymentMethodSelect = document.getElementById('paymentMethod');
+    if (paymentMethodSelect) {
+        paymentMethodSelect.addEventListener('change', togglePaymentFields);
+    }
+});
