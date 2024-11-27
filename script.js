@@ -46,7 +46,7 @@ function updateProductDisplay() {
     priceBreakdown.textContent = `Base Price: $${basePrice} + Storage Upgrade: $${storagePrice}`;
 }
 
-async function checkStock(productId, requestedQuantity) {
+async function checkStock(productId, requestedQuantity, updateInventory = false) {
     try {
         const response = await fetch(API_ENDPOINT, {
             method: 'POST',
@@ -55,7 +55,7 @@ async function checkStock(productId, requestedQuantity) {
             },
             body: JSON.stringify({
                 productId: productId,
-                quantity: requestedQuantity
+                quantity: updateInventory ? requestedQuantity : 0  // Only send quantity if updating inventory
             })
         });
 
@@ -67,7 +67,6 @@ async function checkStock(productId, requestedQuantity) {
         const bodyData = typeof data.body === 'string' ? JSON.parse(data.body) : data.body;
         console.log('Parsed response body:', bodyData);
         
-        // Return both success status and current stock information
         return {
             success: bodyData.success === true,
             currentStock: bodyData.remainingStock || 0,
@@ -142,26 +141,10 @@ async function proceedToCheckout() {
     try {
         // Process each item in the cart
         for (const item of cart) {
-            const response = await fetch(API_ENDPOINT, {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json'
-                },
-                body: JSON.stringify({
-                    productId: item.productId,
-                    quantity: item.quantity
-                })
-            });
+            const stockCheck = await checkStock(item.productId, item.quantity, true); // Set updateInventory to true
 
-            if (!response.ok) {
-                throw new Error(`Failed to process ${item.productId}`);
-            }
-
-            const data = await response.json();
-            const bodyData = typeof data.body === 'string' ? JSON.parse(data.body) : data.body;
-            
-            if (!bodyData.success) {
-                showMessage(`Error: ${bodyData.message}`, 'error');
+            if (!stockCheck.success) {
+                showMessage(`Error: ${stockCheck.message}`, 'error');
                 return;
             }
         }
