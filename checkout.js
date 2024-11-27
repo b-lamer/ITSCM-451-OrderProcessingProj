@@ -3,24 +3,37 @@ let cart = JSON.parse(localStorage.getItem('cart')) || [];
 let customerInfo = {};
 
 // Display order summary
+// At the start of checkout.js
 function updateOrderSummary() {
+    const cart = JSON.parse(localStorage.getItem('phoneShopCart')) || [];
     const summaryItems = document.getElementById('summaryItems');
     const summaryTotal = document.getElementById('summaryTotal');
     let total = 0;
 
-    summaryItems.innerHTML = cart.map(item => {
-        total += item.price;
-        return `
-            <div class="summary-item">
-                <p>${item.productId} - ${item.color}</p>
-                <p>Quantity: ${item.quantity}</p>
-                <p>$${item.price}</p>
-            </div>
-        `;
-    }).join('');
+    // Clear existing content
+    summaryItems.innerHTML = '';
 
+    // Add each cart item
+    cart.forEach(item => {
+        total += item.price;
+        const itemElement = document.createElement('div');
+        itemElement.className = 'summary-item';
+        itemElement.innerHTML = `
+            <p>${item.productId} - ${item.color}</p>
+            <p>Quantity: ${item.quantity}</p>
+            <p>$${item.price}</p>
+        `;
+        summaryItems.appendChild(itemElement);
+    });
+
+    // Update total
     summaryTotal.textContent = `$${total}`;
 }
+
+// Initialize when page loads
+document.addEventListener('DOMContentLoaded', () => {
+    updateOrderSummary();
+});
 
 // Handle form submission
 function proceedToPayment() {
