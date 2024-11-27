@@ -26,6 +26,7 @@ const priceDisplay = document.getElementById('priceDisplay');
 const priceBreakdown = document.getElementById('priceBreakdown');
 const cartItems = document.getElementById('cartItems');
 const message = document.getElementById('message');
+const STORAGE_KEY = 'phoneShopCart';
 
 // Event Listeners
 phoneModelSelect.addEventListener('change', updateProductDisplay);
@@ -112,16 +113,18 @@ function updateCartDisplay() {
             <p>Price: $${item.price}</p>
         </div>
     `).join('');
+    
+    // Add this line to save cart
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(cart));
 }
 
-function checkout() {
+function proceedToCheckout() {
     if (cart.length === 0) {
         showMessage('Your cart is empty.', 'error');
         return;
     }
     
-    // Implement checkout logic here
-    showMessage('Checkout functionality coming soon!', 'success');
+    window.location.href = 'checkout.html';
 }
 
 function showMessage(text, type) {
