@@ -66,8 +66,8 @@ async function checkStock(productId) {
 }
 
 async function addToCart() {
-    const model = phoneModelSelect.value;
-    const storage = storageSelect.value;
+    const model = phoneModelSelect.value.split(' ')[0]; // Gets just "Samsung" from "Samsung ($999)"
+    const storage = storageSelect.value.split(' ')[0]; // Gets just "64" from "64 GB (Included)"
     const color = colorSelect.value;
     const quantity = parseInt(quantityInput.value);
 
@@ -76,12 +76,12 @@ async function addToCart() {
         return;
     }
 
-    // Format ProductID to match DynamoDB format (e.g., iPhone64GB)
-    const productId = `${model.replace(/\s+/g, '')}${storage}GB`;
-    console.log('Checking stock for product:', productId);
+    // Format ProductID to match DynamoDB format (e.g., "Samsung64GB")
+    const productId = `${model}${storage}GB`;
+    console.log('Checking stock for product:', productId); // Add this for debugging
     
     const inStock = await checkStock(productId);
-    console.log('Stock check result:', inStock);
+    console.log('Stock check result:', inStock); // Add this for debugging
 
     if (!inStock) {
         showMessage(`Sorry, ${model} ${storage}GB is out of stock.`, 'error');
