@@ -72,7 +72,11 @@ async function checkStock(productId) {
         }
 
         const data = await response.json();
-        return data && data.success === true;
+        // Parse the body if it's a string
+        const bodyData = typeof data.body === 'string' ? JSON.parse(data.body) : data.body;
+        console.log('Parsed response body:', bodyData);
+        
+        return bodyData && bodyData.success === true;
     } catch (error) {
         console.error('Error checking stock:', error);
         return false;
@@ -154,8 +158,10 @@ async function proceedToCheckout() {
             }
 
             const data = await response.json();
-            if (!data.success) {
-                showMessage(`Error: ${data.message}`, 'error');
+            const bodyData = typeof data.body === 'string' ? JSON.parse(data.body) : data.body;
+            
+            if (!bodyData.success) {
+                showMessage(`Error: ${bodyData.message}`, 'error');
                 return;
             }
         }
