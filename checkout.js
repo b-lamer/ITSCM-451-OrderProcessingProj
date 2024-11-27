@@ -51,7 +51,12 @@ function proceedToPayment() {
 }
 
 // Initialize page
+// In checkout.js
 document.addEventListener('DOMContentLoaded', () => {
+    // Load cart from localStorage
+    const cart = JSON.parse(localStorage.getItem('phoneShopCart')) || [];
+    
+    // Update order summary with cart items
     updateOrderSummary();
     
     // Pre-fill form if returning from payment page
