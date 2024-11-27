@@ -28,13 +28,6 @@ const cartItems = document.getElementById('cartItems');
 const message = document.getElementById('message');
 const STORAGE_KEY = 'phoneShopCart';
 
-// Event Listeners
-phoneModelSelect.addEventListener('change', updateProductDisplay);
-storageSelect.addEventListener('change', updateProductDisplay);
-colorSelect.addEventListener('change', updateProductDisplay);
-document.getElementById('addToCart').addEventListener('click', addToCart);
-document.getElementById('checkout').addEventListener('click', proceedToCheckout);
-
 
 function updateProductDisplay() {
     const model = phoneModelSelect.value.split(' ')[0];
@@ -53,9 +46,8 @@ function updateProductDisplay() {
     priceBreakdown.textContent = `Base Price: $${basePrice} + Storage Upgrade: $${storagePrice}`;
 }
 
-async function checkStock(productId) {
+async function checkStock(productId, requestedQuantity) {
     try {
-        // Get current item from DynamoDB to check if it exists and has stock
         const response = await fetch(API_ENDPOINT, {
             method: 'POST',
             headers: {
@@ -63,7 +55,7 @@ async function checkStock(productId) {
             },
             body: JSON.stringify({
                 productId: productId,
-                quantity: 0  // Just checking existence, not updating stock
+                quantity: requestedQuantity
             })
         });
 
@@ -72,14 +64,22 @@ async function checkStock(productId) {
         }
 
         const data = await response.json();
-        // Parse the body if it's a string
         const bodyData = typeof data.body === 'string' ? JSON.parse(data.body) : data.body;
         console.log('Parsed response body:', bodyData);
         
-        return bodyData && bodyData.success === true;
+        // Return both success status and current stock information
+        return {
+            success: bodyData.success === true,
+            currentStock: bodyData.remainingStock || 0,
+            message: bodyData.message
+        };
     } catch (error) {
         console.error('Error checking stock:', error);
-        return false;
+        return {
+            success: false,
+            currentStock: 0,
+            message: 'Error checking stock'
+        };
     }
 }
 
@@ -97,11 +97,11 @@ async function addToCart() {
     const productId = `${model}${storage}GB`;
     console.log('Checking stock for product:', productId);
     
-    const productExists = await checkStock(productId);
-    console.log('Stock check result:', productExists);
+    const stockCheck = await checkStock(productId, quantity);
+    console.log('Stock check result:', stockCheck);
 
-    if (!productExists) {
-        showMessage(`Sorry, ${model} ${storage}GB is not available.`, 'error');
+    if (!stockCheck.success) {
+        showMessage(`Sorry, insufficient stock available. Current stock: ${stockCheck.currentStock}`, 'error');
         return;
     }
 
@@ -183,3 +183,32 @@ function showMessage(text, type) {
         message.className = '';
     }, 3000);
 }
+
+function initializeEventListeners() {
+    // Remove existing listeners first
+    phoneModelSelect.removeEventListener('change', updateProductDisplay);
+    storageSelect.removeEventListener('change', updateProductDisplay);
+    colorSelect.removeEventListener('change', updateProductDisplay);
+    const addToCartButton = document.getElementById('addToCart');
+    const checkoutButton = document.getElementById('checkout');
+    
+    // Clear existing click listeners
+    if (addToCartButton) {
+        const newAddToCartButton = addToCartButton.cloneNode(true);
+        addToCartButton.parentNode.replaceChild(newAddToCartButton, addToCartButton);
+        newAddToCartButton.addEventListener('click', addToCart);
+    }
+    
+    if (checkoutButton) {
+        const newCheckoutButton = checkoutButton.cloneNode(true);
+        checkoutButton.parentNode.replaceChild(newCheckoutButton, checkoutButton);
+        newCheckoutButton.addEventListener('click', proceedToCheckout);
+    }
+
+    // Add new listeners
+    phoneModelSelect.addEventListener('change', updateProductDisplay);
+    storageSelect.addEventListener('change', updateProductDisplay);
+    colorSelect.addEventListener('change', updateProductDisplay);
+}
+
+document.addEventListener('DOMContentLoaded', initializeEventListeners);
