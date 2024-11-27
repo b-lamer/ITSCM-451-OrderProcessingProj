@@ -48,6 +48,8 @@ function updateProductDisplay() {
 
 async function checkStock(productId, requestedQuantity, updateInventory = false) {
     try {
+        console.log(`Checking stock for ${productId}, quantity: ${requestedQuantity}, update: ${updateInventory}`);
+        
         const response = await fetch(API_ENDPOINT, {
             method: 'POST',
             headers: {
@@ -55,7 +57,7 @@ async function checkStock(productId, requestedQuantity, updateInventory = false)
             },
             body: JSON.stringify({
                 productId: productId,
-                quantity: updateInventory ? requestedQuantity : 0  // Only send quantity if updating inventory
+                quantity: updateInventory ? requestedQuantity : 0
             })
         });
 
@@ -65,8 +67,8 @@ async function checkStock(productId, requestedQuantity, updateInventory = false)
 
         const data = await response.json();
         const bodyData = typeof data.body === 'string' ? JSON.parse(data.body) : data.body;
-        console.log('Parsed response body:', bodyData);
-        
+        console.log('Stock check response:', bodyData);
+
         return {
             success: bodyData.success === true,
             currentStock: bodyData.remainingStock || 0,
@@ -158,16 +160,20 @@ async function proceedToCheckout() {
     }
 
     try {
-        // Process each item in the cart
+        // Final stock check before proceeding
         for (const item of cart) {
-            const stockCheck = await checkStock(item.productId, item.quantity, true); // Set updateInventory to true
+            const stockCheck = await checkStock(item.productId, item.quantity, true);
+            console.log(`Checkout stock check for ${item.productId}:`, stockCheck);
 
             if (!stockCheck.success) {
-                showMessage(`Error: ${stockCheck.message}`, 'error');
+                showMessage(`Error: Insufficient stock for ${item.productId}`, 'error');
                 return;
             }
         }
 
+        // Save cart to localStorage before redirecting
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(cart));
+        
         // If all items processed successfully, proceed to checkout page
         window.location.href = 'checkout.html';
         
