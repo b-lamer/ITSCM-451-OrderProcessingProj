@@ -37,47 +37,42 @@ async function processPayment() {
         return;
     }
 
-    const method = document.getElementById('paymentMethod').value;
-    let paymentInfo = {
-        method: method
-    };
-
-    // Collect payment details based on method
-    if (method === 'credit' || method === 'debit') {
-        paymentInfo = {
-            ...paymentInfo,
-            cardNumber: document.getElementById('cardNumber').value,
-            expiryDate: document.getElementById('expiryDate').value,
-            cvv: document.getElementById('cvv').value
-        };
-    } else if (method === 'paypal') {
-        paymentInfo = {
-            ...paymentInfo,
-            paypalEmail: document.getElementById('paypalEmail').value
-        };
-    }
-
-    // Create final order object
-    const order = {
-        customerInfo,
-        cart,
-        paymentInfo,
-        orderDate: new Date().toISOString(),
-        orderStatus: 'pending'
-    };
-
+    const cart = JSON.parse(localStorage.getItem(STORAGE_KEY)) || [];
+    
     try {
-        // Here you would typically send the order to your backend
-        console.log('Order processed:', order);
-        
+        // Update inventory here
+        for (const item of cart) {
+            const response = await fetch(API_ENDPOINT, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                    productId: item.productId,
+                    quantity: item.quantity
+                })
+            });
+
+            if (!response.ok) {
+                throw new Error(`Failed to process ${item.productId}`);
+            }
+
+            const data = await response.json();
+            const bodyData = typeof data.body === 'string' ? JSON.parse(data.body) : data.body;
+            
+            if (!bodyData.success) {
+                throw new Error(bodyData.message || 'Failed to update inventory');
+            }
+        }
+
         // Clear cart and stored info
-        localStorage.removeItem('cart');
+        localStorage.removeItem(STORAGE_KEY);
         localStorage.removeItem('customerInfo');
 
         // Redirect to confirmation page
         window.location.href = 'confirmation.html';
     } catch (error) {
-        console.error('Error processing order:', error);
+        console.error('Error processing payment:', error);
         alert('There was an error processing your order. Please try again.');
     }
 }
