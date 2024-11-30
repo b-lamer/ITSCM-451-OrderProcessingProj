@@ -4,27 +4,105 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Order Confirmation</title>
-    <link rel="stylesheet" href="styles.css">
     <link rel="stylesheet" href="checkout-styles.css">
+    <link rel="stylesheet" href="styles.css">
 </head>
 <body>
     <div class="checkout-container">
         <div class="checkout-progress">
-            <div class="progress-step completed">Cart</div>
-            <div class="progress-step completed">Information</div>
-            <div class="progress-step completed">Payment</div>
-            <div class="progress-step completed">Confirmation</div>
+            <div class="progress-step completed">
+                Cart
+            </div>
+            <div class="progress-step completed">
+                Information
+            </div>
+            <div class="progress-step completed">
+                Payment
+            </div>
+            <div class="progress-step completed">
+                Confirmation
+            </div>
         </div>
 
         <div class="checkout-content">
             <div class="confirmation-message">
                 <h2>Thank You for Your Order!</h2>
-                <p>Your order has been successfully placed.</p>
-                <button onclick="window.location.href='index.html'" class="primary-button">
-                    Return to Store
-                </button>
+                <div id="orderDetails" class="order-details">
+                    Your order has been successfully placed.
+                </div>
+                <div class="button-group">
+                    <button onclick="window.location.href='index.html'" class="primary-button">Return to Store</button>
+                </div>
             </div>
         </div>
     </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            try {
+                const orderSuccess = localStorage.getItem('orderSuccess');
+                if (orderSuccess) {
+                    const orderData = JSON.parse(orderSuccess);
+                    document.getElementById('orderDetails').innerHTML = `
+                        <div class="success-message">
+                            <p>Order #${orderData.orderId} has been successfully placed.</p>
+                            <p>${orderData.message}</p>
+                        </div>
+                    `;
+                    // Clear the success data
+                    localStorage.removeItem('orderSuccess');
+                }
+            } catch (e) {
+                // If there's any error, keep the default success message
+                console.log('Error displaying order details:', e);
+            }
+        });
+    </script>
+
+    <style>
+        .confirmation-message {
+            text-align: center;
+            padding: 2rem;
+            background: white;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+
+        .order-details {
+            margin: 2rem 0;
+            padding: 1rem;
+            background: #f8f9fa;
+            border-radius: 4px;
+        }
+
+        .success-message {
+            color: #28a745;
+            font-size: 1.1em;
+            margin: 1rem 0;
+        }
+
+        .success-message p {
+            margin: 0.5rem 0;
+        }
+
+        .button-group {
+            margin-top: 2rem;
+        }
+
+        .primary-button {
+            background-color: #007bff;
+            color: white;
+            padding: 12px 24px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 1rem;
+            transition: background-color 0.2s;
+        }
+
+        .primary-button:hover {
+            background-color: #0056b3;
+        }
+    </style>
 </body>
 </html>
