@@ -120,12 +120,26 @@ async function processPayment() {
         const orderBody = typeof orderResult.body === 'string' ? JSON.parse(orderResult.body) : orderResult.body;
 
         if (orderResult.statusCode === 200 && orderBody.status === 'success') {
-            // Clear cart and stored info after successful processing
-            localStorage.removeItem('phoneShopCart');
-            localStorage.removeItem('customerInfo');
+            try {
+                // Clear cart and stored info after successful processing
+                localStorage.removeItem('phoneShopCart');
+                localStorage.removeItem('customerInfo');
 
-            // Redirect to confirmation
-            window.location.href = 'confirmation.html';
+                // Store success message in localStorage
+                localStorage.setItem('orderSuccess', JSON.stringify({
+                    orderId: orderBody.OrderID,
+                    message: 'Order processed successfully'
+                }));
+
+                // Use a small timeout to ensure localStorage is updated before redirect
+                setTimeout(() => {
+                    window.location.href = 'confirmation.html';
+                }, 100);
+            } catch (e) {
+                // If we get an error here, the order was still successful
+                // Just redirect to confirmation page
+                window.location.href = 'confirmation.html';
+            }
         } else {
             throw new Error(orderBody.message || 'Order processing failed');
         }
