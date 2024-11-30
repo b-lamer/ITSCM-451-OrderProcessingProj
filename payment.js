@@ -1,5 +1,6 @@
 // Constants
-const API_ENDPOINT = 'https://u1gir1ouw7.execute-api.us-east-1.amazonaws.com/prod/check-stock';
+const STOCK_API_ENDPOINT = 'https://u1gir1ouw7.execute-api.us-east-1.amazonaws.com/prod/check-stock';
+const ORDER_API_ENDPOINT = 'https://u1gir1ouw7.execute-api.us-east-1.amazonaws.com/prod/submit-order';
 
 // Load cart and customer data from localStorage
 function updateOrderSummary() {
@@ -37,45 +38,10 @@ function togglePaymentFields() {
     paypalFields.style.display = method === 'paypal' ? 'block' : 'none';
 }
 
-async function processPayment() {
-    const form = document.getElementById('paymentForm');
-    if (!form.checkValidity()) {
-        form.reportValidity();
-        return;
-    }
-
-    const method = document.getElementById('paymentMethod').value;
-    let paymentInfo = {
-        method: method
-    };
-
-    // Collect payment details based on method
-    if (method === 'credit' || method === 'debit') {
-        paymentInfo = {
-            ...paymentInfo,
-            cardNumber: document.getElementById('cardNumber').value,
-            expiryDate: document.getElementById('expiryDate').value,
-            cvv: document.getElementById('cvv').value
-        };
-    } else if (method === 'paypal') {
-        paymentInfo = {
-            ...paymentInfo,
-            paypalEmail: document.getElementById('paypalEmail').value
-        };
-    }
-
-    const cart = JSON.parse(localStorage.getItem('phoneShopCart')) || [];
-    const customerInfo = JSON.parse(localStorage.getItem('customerInfo')) || {};
-
-    if (cart.length === 0) {
-        alert('Your cart is empty');
-        return;
-    }
-
-    try {
-        // Process each item in cart
-        for (const item of cart) {
-            const response = await fetch(API_ENDPOINT, {
+async function checkInventoryAvailability(cart) {
+    for (const item of cart) {
+        try {
+            const response = await fetch(STOCK_API_ENDPOINT, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json'
@@ -87,37 +53,86 @@ async function processPayment() {
             });
 
             if (!response.ok) {
-                throw new Error(`Failed to process ${item.productId}`);
+                throw new Error(`Failed to check stock for ${item.productId}`);
             }
 
             const data = await response.json();
             const bodyData = typeof data.body === 'string' ? JSON.parse(data.body) : data.body;
-            
+
             if (!bodyData.success) {
-                throw new Error(bodyData.message || 'Failed to update inventory');
+                throw new Error(bodyData.message || `Insufficient stock for ${item.productId}`);
             }
+        } catch (error) {
+            console.error('Stock check error:', error);
+            throw new Error(`Stock check failed for ${item.productId}`);
+        }
+    }
+    return true;
+}
+
+async function processPayment() {
+    try {
+        const form = document.getElementById('paymentForm');
+        if (!form.checkValidity()) {
+            form.reportValidity();
+            return;
         }
 
-        // Create final order object
-        const order = {
-            customerInfo,
-            cart,
-            paymentInfo,
-            orderDate: new Date().toISOString(),
-            orderStatus: 'completed'
+        const method = document.getElementById('paymentMethod').value;
+        const cart = JSON.parse(localStorage.getItem('phoneShopCart')) || [];
+        const customerInfo = JSON.parse(localStorage.getItem('customerInfo')) || {};
+
+        if (cart.length === 0) {
+            alert('Your cart is empty');
+            return;
+        }
+
+        // First check inventory availability
+        await checkInventoryAvailability(cart);
+
+        // Prepare order data
+        const orderData = {
+            Name: customerInfo.fullName,
+            Email: customerInfo.email,
+            Address: `${customerInfo.address}, ${customerInfo.city}, ${customerInfo.state} ${customerInfo.zipCode}`,
+            PaymentInfo: method,
+            OrderItems: cart.map(item => ({
+                ProductID: item.productId,
+                Quantity: item.quantity
+            })),
+            OrderStatus: "Pending"
         };
 
-        console.log('Order processed:', order);
+        // Submit order
+        const orderResponse = await fetch(ORDER_API_ENDPOINT, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify(orderData)
+        });
 
-        // Clear cart and stored info after successful processing
-        localStorage.removeItem('phoneShopCart');
-        localStorage.removeItem('customerInfo');
+        if (!orderResponse.ok) {
+            throw new Error('Failed to submit order');
+        }
 
-        // Redirect to confirmation
-        window.location.href = 'confirmation.html';
+        const orderResult = await orderResponse.json();
+        const orderBody = typeof orderResult.body === 'string' ? JSON.parse(orderResult.body) : orderResult.body;
+
+        if (orderResult.statusCode === 200 && orderBody.status === 'success') {
+            // Clear cart and stored info after successful processing
+            localStorage.removeItem('phoneShopCart');
+            localStorage.removeItem('customerInfo');
+
+            // Redirect to confirmation
+            window.location.href = 'confirmation.html';
+        } else {
+            throw new Error(orderBody.message || 'Order processing failed');
+        }
+
     } catch (error) {
         console.error('Payment processing error:', error);
-        alert('There was an error processing your payment. Please try again.');
+        alert('There was an error processing your order: ' + error.message);
     }
 }
 
