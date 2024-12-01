@@ -21,14 +21,13 @@ jobs:
         
     - name: Deploy to S3
       run: |
-        # Sync with public-read ACL
         aws s3 sync ./ s3://orderprocessingteam2 \
           --exclude "*" \
           --include "*.html" \
           --include "*.css" \
           --include "*.js" \
           --include "images/*" \
+          --include "images/phones/*" \
           --exclude ".git/*" \
           --exclude ".github/*" \
-          --exclude "README.md" \
-          --acl public-read
+          --exclude "README.md"
