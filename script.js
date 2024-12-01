@@ -44,6 +44,13 @@ function updateProductDisplay() {
     
     priceDisplay.textContent = `$${totalPrice}`;
     priceBreakdown.textContent = `Base Price: $${basePrice} + Storage Upgrade: $${storagePrice}`;
+    const productContainer = document.getElementById('productDisplayContainer');
+    const imageUrl = `/images/phones/${model.toLowerCase()}.jpg`;
+    productContainer.innerHTML = `
+        <div class="product-image-container">
+            <img src="${imageUrl}" alt="${model}" class="product-image">
+        </div>
+    `;
 }
 
 async function checkStock(productId, requestedQuantity, updateInventory = false) {
