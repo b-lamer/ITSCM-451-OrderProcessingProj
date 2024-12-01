@@ -20,15 +20,4 @@ jobs:
         aws-region: us-east-1
         
     - name: Deploy to S3
-      run: |
-        aws s3 sync ./ s3://orderprocessingteam2 \
-          --exclude "*" \
-          --include "*.html" \
-          --include "*.css" \
-          --include "*.js" \
-          --include "images/*" \
-          --include "images/phones/*" \
-          --exclude ".git/*" \
-          --exclude ".github/*" \
-          --exclude "README.md"
-          --acl public-read
+      run: aws s3 sync ./ s3://orderprocessingteam2 --exclude "*" --include "*.html" --include "*.css" --include "*.js" --include "images/*" --include "images/phones/*" --exclude ".git/*" --exclude ".github/*" --exclude "README.md" --acl public-read
