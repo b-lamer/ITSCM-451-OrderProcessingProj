@@ -109,18 +109,20 @@ async function processPayment() {
         const orderResponse = await fetch(ORDER_API_ENDPOINT, {
             method: 'POST',
             headers: {
-                'Content-Type': 'application/json'
+                'Content-Type': 'application/json',
+                'Origin': window.location.origin
             },
             body: JSON.stringify(orderData)
         });
-
+        
         const orderResult = await orderResponse.json();
         console.log('Raw order result:', orderResult);
-
+        
         // Parse the body string since it comes as a stringified JSON
         const bodyJson = JSON.parse(orderResult.body);
         console.log('Parsed body:', bodyJson);
-
+        
+        // Check if OrderID exists in the parsed body
         if (bodyJson && bodyJson.OrderID !== undefined) {
             console.log('Found OrderID:', bodyJson.OrderID);
             localStorage.setItem('orderTrackingNumber', bodyJson.OrderID.toString());
