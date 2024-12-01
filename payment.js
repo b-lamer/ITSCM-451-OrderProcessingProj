@@ -103,6 +103,8 @@ async function processPayment() {
             OrderStatus: "Pending"
         };
 
+        console.log('Sending order data:', orderData);
+
         // Submit order
         const orderResponse = await fetch(ORDER_API_ENDPOINT, {
             method: 'POST',
@@ -112,27 +114,18 @@ async function processPayment() {
             body: JSON.stringify(orderData)
         });
 
-        // Log the raw response for debugging
-        console.log('Raw response:', orderResponse);
-        
-        // Process response
         const orderResult = await orderResponse.json();
-        console.log('Order result:', orderResult);
+        console.log('Raw order result:', orderResult);
+
+        // Parse the body string since it comes as a stringified JSON
+        const bodyJson = JSON.parse(orderResult.body);
+        console.log('Parsed body:', bodyJson);
         
-        // Handle nested JSON if present
-        let orderDetails;
-        if (orderResult.body && typeof orderResult.body === 'string') {
-            orderDetails = JSON.parse(orderResult.body);
+        if (bodyJson.OrderID) {
+            console.log('Found OrderID:', bodyJson.OrderID);
+            localStorage.setItem('orderTrackingNumber', bodyJson.OrderID.toString());
         } else {
-            orderDetails = orderResult.body;
-        }
-        console.log('Order details:', orderDetails);
-        
-        if (orderDetails && orderDetails.OrderID) {
-            console.log('Setting OrderID:', orderDetails.OrderID);
-            localStorage.setItem('orderTrackingNumber', orderDetails.OrderID.toString());
-        } else {
-            console.log('OrderID not found in response');
+            console.warn('No OrderID in response:', bodyJson);
         }
 
         // Clear cart and stored info
@@ -144,7 +137,6 @@ async function processPayment() {
 
     } catch (error) {
         console.error('Payment processing error:', error);
-        // Still redirect to confirmation but with error noted
         localStorage.setItem('orderError', error.message);
         window.location.replace('confirmation.html');
     }
