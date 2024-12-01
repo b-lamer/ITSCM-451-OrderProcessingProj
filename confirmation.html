@@ -5,112 +5,43 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Order Confirmation</title>
     <link rel="stylesheet" href="styles.css">
-    <style>
-        .confirmation-container {
-            max-width: 800px;
-            margin: 40px auto;
-            padding: 20px;
-        }
-
-        .progress-steps {
-            display: flex;
-            justify-content: space-between;
-            margin-bottom: 30px;
-            padding: 20px;
-            background: #f8f9fa;
-            border-radius: 8px;
-        }
-
-        .progress-step {
-            padding: 8px 20px;
-            color: #6c757d;
-            position: relative;
-        }
-
-        .progress-step.completed {
-            color: #28a745;
-        }
-
-        .progress-step.active {
-            color: #007bff;
-            font-weight: bold;
-        }
-
-        .confirmation-message {
-            text-align: center;
-            padding: 40px;
-            background: white;
-            border-radius: 8px;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-        }
-
-        .tracking-number {
-            margin: 20px 0;
-            padding: 15px;
-            background: #f8f9fa;
-            border-radius: 4px;
-            font-size: 1.1em;
-        }
-
-        .return-button {
-            background-color: #007bff;
-            color: white;
-            border: none;
-            padding: 12px 24px;
-            border-radius: 4px;
-            cursor: pointer;
-            font-size: 1em;
-            margin-top: 20px;
-        }
-
-        .return-button:hover {
-            background-color: #0056b3;
-        }
-    </style>
 </head>
 <body>
-    <div class="confirmation-container">
-        <div class="progress-steps">
+    <div class="checkout-container">
+        <div class="checkout-progress">
             <div class="progress-step completed">Cart</div>
             <div class="progress-step completed">Information</div>
             <div class="progress-step completed">Payment</div>
             <div class="progress-step active">Confirmation</div>
         </div>
 
-        <div class="confirmation-message">
-            <h2>Thank You for Your Order!</h2>
-            <p>Your order has been successfully placed.</p>
-            
-            <div class="tracking-number">
-                Tracking Number: <span id="orderNumber"></span>
-            </div>
+        <div class="checkout-content">
+            <div class="confirmation-message">
+                <h2>Thank You for Your Order!</h2>
+                <p>Your order has been successfully placed.</p>
+                
+                <div class="tracking-section">
+                    <p>Tracking Number: <span id="trackingNumber"></span></p>
+                </div>
 
-            <button onclick="window.location.href='index.html'" class="return-button">
-                Return to Store
-            </button>
+                <button onclick="window.location.href='index.html'" class="primary-button">
+                    Return to Store
+                </button>
+            </div>
         </div>
     </div>
 
     <script>
         document.addEventListener('DOMContentLoaded', function() {
-            try {
-                // Check if we have a successful order response
-                const orderResponse = localStorage.getItem('orderSuccess');
-                if (orderResponse) {
-                    const response = JSON.parse(orderResponse);
-                    const orderData = typeof response.body === 'string' ? JSON.parse(response.body) : response.body;
-                    
-                    // Display the order ID as tracking number
-                    if (orderData && orderData.OrderID) {
-                        document.getElementById('orderNumber').textContent = orderData.OrderID;
-                    }
-                    
-                    // Clear the order data from localStorage
-                    localStorage.removeItem('orderSuccess');
-                }
-            } catch (error) {
-                console.error('Error displaying order details:', error);
-                document.getElementById('orderNumber').textContent = 'Not Available';
+            const trackingNumber = localStorage.getItem('orderTrackingNumber');
+            const trackingElement = document.getElementById('trackingNumber');
+            
+            if (trackingNumber) {
+                trackingElement.textContent = trackingNumber;
+                // Clear the tracking number from storage
+                localStorage.removeItem('orderTrackingNumber');
+            } else {
+                trackingElement.textContent = 'Not available';
             }
         });
     </script>
