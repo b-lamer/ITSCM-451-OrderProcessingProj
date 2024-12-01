@@ -112,29 +112,25 @@ async function processPayment() {
             body: JSON.stringify(orderData)
         });
 
-        if (!orderResponse.ok) {
-            throw new Error('Failed to submit order');
-        }
-
+        // Process response
         const orderResult = await orderResponse.json();
         const orderBody = typeof orderResult.body === 'string' ? JSON.parse(orderResult.body) : orderResult.body;
+        
+        // Store the OrderID in localStorage
+        if (orderBody && orderBody.OrderID) {
+            localStorage.setItem('orderTrackingNumber', orderBody.OrderID.toString());
+        }
 
-        // If we get here, the order was submitted successfully
         // Clear cart and stored info
         localStorage.removeItem('phoneShopCart');
         localStorage.removeItem('customerInfo');
 
-        // Store the order ID if available
-        if (orderBody && orderBody.OrderID) {
-            localStorage.setItem('lastOrderId', orderBody.OrderID);
-        }
-
-        // Redirect immediately - don't wait for the response to complete
-        window.location.href = 'confirmation.html';
+        // Redirect to confirmation page
+        window.location.replace('confirmation.html');
 
     } catch (error) {
         console.error('Payment processing error:', error);
-        alert('There was an error processing your order: ' + error.message);
+        window.location.replace('confirmation.html');
     }
 }
 
