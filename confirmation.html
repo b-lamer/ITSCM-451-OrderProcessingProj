@@ -5,6 +5,86 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Order Confirmation</title>
     <link rel="stylesheet" href="styles.css">
+    <style>
+        .checkout-container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        .checkout-progress {
+            display: flex;
+            justify-content: center;
+            margin-bottom: 30px;
+            padding: 20px;
+            background: #f8f9fa;
+            border-radius: 8px;
+            gap: 40px;
+        }
+
+        .progress-step {
+            color: #6c757d;
+            font-size: 16px;
+        }
+
+        .progress-step.completed {
+            color: #28a745;
+        }
+
+        .progress-step.active {
+            color: #007bff;
+            font-weight: bold;
+        }
+
+        .confirmation-message {
+            text-align: center;
+            padding: 40px;
+            background: white;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            max-width: 600px;
+            margin: 0 auto;
+        }
+
+        .confirmation-message h2 {
+            font-size: 28px;
+            margin-bottom: 20px;
+            color: #333;
+        }
+
+        .confirmation-message p {
+            font-size: 18px;
+            color: #666;
+            margin-bottom: 30px;
+        }
+
+        .tracking-section {
+            background: #f8f9fa;
+            padding: 20px;
+            border-radius: 4px;
+            margin: 30px 0;
+            font-size: 18px;
+        }
+
+        .tracking-section p {
+            margin: 0;
+        }
+
+        .primary-button {
+            background-color: #007bff;
+            color: white;
+            border: none;
+            padding: 12px 30px;
+            border-radius: 4px;
+            font-size: 16px;
+            cursor: pointer;
+            transition: background-color 0.2s;
+        }
+
+        .primary-button:hover {
+            background-color: #0056b3;
+        }
+    </style>
 </head>
 <body>
     <div class="checkout-container">
@@ -15,30 +95,30 @@
             <div class="progress-step active">Confirmation</div>
         </div>
 
-        <div class="checkout-content">
-            <div class="confirmation-message">
-                <h2>Thank You for Your Order!</h2>
-                <p>Your order has been successfully placed.</p>
-                
-                <div class="tracking-section">
-                    <p>Tracking Number: <span id="trackingNumber"></span></p>
-                </div>
-
-                <button onclick="window.location.href='index.html'" class="primary-button">
-                    Return to Store
-                </button>
+        <div class="confirmation-message">
+            <h2>Thank You for Your Order!</h2>
+            <p>Your order has been successfully placed.</p>
+            
+            <div class="tracking-section">
+                <p>Tracking Number: <span id="trackingNumber">Loading...</span></p>
             </div>
+
+            <button onclick="window.location.href='index.html'" class="primary-button">
+                Return to Store
+            </button>
         </div>
     </div>
 
     <script>
         document.addEventListener('DOMContentLoaded', function() {
+            console.log('Checking for tracking number...');
             const trackingNumber = localStorage.getItem('orderTrackingNumber');
+            console.log('Found tracking number:', trackingNumber);
+            
             const trackingElement = document.getElementById('trackingNumber');
             
             if (trackingNumber) {
                 trackingElement.textContent = trackingNumber;
-                // Clear the tracking number from storage
                 localStorage.removeItem('orderTrackingNumber');
             } else {
                 trackingElement.textContent = 'Not available';
