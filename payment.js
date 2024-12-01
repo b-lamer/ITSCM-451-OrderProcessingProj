@@ -112,13 +112,27 @@ async function processPayment() {
             body: JSON.stringify(orderData)
         });
 
+        // Log the raw response for debugging
+        console.log('Raw response:', orderResponse);
+        
         // Process response
         const orderResult = await orderResponse.json();
-        const orderBody = typeof orderResult.body === 'string' ? JSON.parse(orderResult.body) : orderResult.body;
+        console.log('Order result:', orderResult);
         
-        // Store the OrderID in localStorage
-        if (orderBody && orderBody.OrderID) {
-            localStorage.setItem('orderTrackingNumber', orderBody.OrderID.toString());
+        // Handle nested JSON if present
+        let orderDetails;
+        if (orderResult.body && typeof orderResult.body === 'string') {
+            orderDetails = JSON.parse(orderResult.body);
+        } else {
+            orderDetails = orderResult.body;
+        }
+        console.log('Order details:', orderDetails);
+        
+        if (orderDetails && orderDetails.OrderID) {
+            console.log('Setting OrderID:', orderDetails.OrderID);
+            localStorage.setItem('orderTrackingNumber', orderDetails.OrderID.toString());
+        } else {
+            console.log('OrderID not found in response');
         }
 
         // Clear cart and stored info
@@ -130,6 +144,8 @@ async function processPayment() {
 
     } catch (error) {
         console.error('Payment processing error:', error);
+        // Still redirect to confirmation but with error noted
+        localStorage.setItem('orderError', error.message);
         window.location.replace('confirmation.html');
     }
 }
