@@ -34,6 +34,16 @@ function updateProductDisplay() {
     const storage = storageSelect.value.split(' ')[0];
     const color = colorSelect.value;
     
+    // Update product display container with image
+    const productContainer = document.getElementById('productDisplayContainer');
+    const imageUrl = `/images/phones/${model.toLowerCase()}.jpg`;
+    productContainer.innerHTML = `
+        <div class="product-image-container">
+            <img src="${imageUrl}" alt="${model}" class="product-image">
+        </div>
+    `;
+    
+    // Update existing product info
     selectedProduct.style.display = 'block';
     productIdDisplay.textContent = `${model} ${storage}GB`;
     colorDisplay.textContent = color;
@@ -44,13 +54,6 @@ function updateProductDisplay() {
     
     priceDisplay.textContent = `$${totalPrice}`;
     priceBreakdown.textContent = `Base Price: $${basePrice} + Storage Upgrade: $${storagePrice}`;
-    const productContainer = document.getElementById('productDisplayContainer');
-    const imageUrl = `/images/phones/${model.toLowerCase()}.jpg`;
-    productContainer.innerHTML = `
-        <div class="product-image-container">
-            <img src="${imageUrl}" alt="${model}" class="product-image">
-        </div>
-    `;
 }
 
 async function checkStock(productId, requestedQuantity, updateInventory = false) {
