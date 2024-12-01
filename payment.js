@@ -120,12 +120,14 @@ async function processPayment() {
         // Parse the body string since it comes as a stringified JSON
         const bodyJson = JSON.parse(orderResult.body);
         console.log('Parsed body:', bodyJson);
-        
-        if (bodyJson.OrderID) {
+
+        if (bodyJson && bodyJson.OrderID !== undefined) {
             console.log('Found OrderID:', bodyJson.OrderID);
             localStorage.setItem('orderTrackingNumber', bodyJson.OrderID.toString());
+            console.log('Saved tracking number to localStorage:', bodyJson.OrderID.toString());
         } else {
             console.warn('No OrderID in response:', bodyJson);
+            localStorage.setItem('orderError', 'No tracking number received from server');
         }
 
         // Clear cart and stored info
