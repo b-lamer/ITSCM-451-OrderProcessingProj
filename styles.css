@@ -9,10 +9,31 @@ body {
     background-color: white;
 }
 
+/* Update the main content width to accommodate the image */
 .main-content {
-    flex: 0 1 600px;  /* Fixed width for main content */
+    flex: 0 1 800px;  /* Increased from 600px */
     padding: 20px 40px;
     margin-right: 20px;
+}
+
+.product-image-container {
+    width: 100%;
+    max-width: 400px;
+    margin: 20px auto;
+    padding: 20px;
+    background: #f8f9fa;
+    border-radius: 8px;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    text-align: center;
+}
+
+.product-image {
+    width: 100%;
+    height: auto;
+    max-height: 300px;
+    display: block;
+    object-fit: contain;
+    margin: 0 auto;
 }
 
 .cart-sidebar {
