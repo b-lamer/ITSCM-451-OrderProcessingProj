@@ -105,6 +105,8 @@ async function processPayment() {
             OrderStatus: "Pending"
         };
 
+        console.log('Submitting order:', orderData);
+
         // Submit order to existing endpoint
         const orderResponse = await fetch(ORDER_API_ENDPOINT, {
             method: 'POST',
@@ -119,10 +121,17 @@ async function processPayment() {
         
         // Parse the response
         const bodyData = JSON.parse(orderResult.body);
+        console.log('Parsed body data:', bodyData);
         
         if (bodyData.status === 'success') {
-            // Add OrderID from response to orderData
+            // Store the OrderID for confirmation page
+            localStorage.setItem('orderTrackingNumber', bodyData.OrderID.toString());
+            
+            // Add OrderID and UserID from response to orderData
             orderData.OrderID = bodyData.OrderID;
+            orderData.UserID = bodyData.UserID;
+            
+            console.log('Sending notification for order:', orderData);
             
             // Send email notification
             try {
@@ -131,23 +140,26 @@ async function processPayment() {
                     headers: {
                         'Content-Type': 'application/json'
                     },
-                    body: JSON.stringify(orderData)
+                    body: JSON.stringify({
+                        body: orderData  // Wrap in body property to match Lambda expectation
+                    })
                 });
                 
-                console.log('Notification sent:', await notificationResponse.json());
+                const notifyResult = await notificationResponse.json();
+                console.log('Notification sent:', notifyResult);
             } catch (notifyError) {
                 console.error('Error sending notification:', notifyError);
                 // Continue with order confirmation even if notification fails
             }
 
-            // Clear cart and stored info
+            // Clear cart and customer info
             localStorage.removeItem('phoneShopCart');
             localStorage.removeItem('customerInfo');
 
             // Redirect to confirmation page
             window.location.replace('confirmation.html');
         } else {
-            throw new Error('Order processing failed');
+            throw new Error(bodyData.message || 'Order processing failed');
         }
 
     } catch (error) {
