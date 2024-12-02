@@ -70,8 +70,6 @@ async function checkInventoryAvailability(cart) {
     return true;
 }
 
-// In your payment.js, modify the processPayment function
-
 async function processPayment() {
     try {
         const form = document.getElementById('paymentForm');
@@ -105,65 +103,46 @@ async function processPayment() {
             OrderStatus: "Pending"
         };
 
-        console.log('Submitting order:', orderData);
+        console.log('Sending order data:', orderData);
 
-        // Submit order to existing endpoint
+        // Submit order
         const orderResponse = await fetch(ORDER_API_ENDPOINT, {
             method: 'POST',
             headers: {
-                'Content-Type': 'application/json'
+                'Content-Type': 'application/json',
+                'Origin': window.location.origin
             },
             body: JSON.stringify(orderData)
         });
-
+        
         const orderResult = await orderResponse.json();
-        console.log('Order result:', orderResult);
+        console.log('Raw order result:', orderResult);
         
-        // Parse the response
-        const bodyData = JSON.parse(orderResult.body);
-        console.log('Parsed body data:', bodyData);
+        // Parse the body string since it comes as a stringified JSON
+        const bodyJson = JSON.parse(orderResult.body);
+        console.log('Parsed body:', bodyJson);
         
-        if (bodyData.status === 'success') {
-            // Store OrderID first (this is what worked before)
-            localStorage.setItem('orderTrackingNumber', bodyData.OrderID.toString());
-        
-            // Add our new email notification
-            try {
-                const notificationResponse = await fetch('https://u1gir1ouw7.execute-api.us-east-1.amazonaws.com/prod/notify-order', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json'
-                    },
-                    body: JSON.stringify({
-                        body: orderData  // Wrap in body property to match Lambda expectation
-                    })
-                });
-                
-                console.log('Notification sent:', await notificationResponse.json());
-            } catch (notifyError) {
-                console.error('Error sending notification:', notifyError);
-                // Continue with order confirmation even if notification fails
-            }
-        
-            // Keep your original cleanup and redirect (this worked before)
-            localStorage.removeItem('phoneShopCart');
-            localStorage.removeItem('customerInfo');
-            window.location.replace('confirmation.html');
+        // Check if OrderID exists in the parsed body
+        if (bodyJson && bodyJson.OrderID !== undefined) {
+            console.log('Found OrderID:', bodyJson.OrderID);
+            localStorage.setItem('orderTrackingNumber', bodyJson.OrderID.toString());
+            console.log('Saved tracking number to localStorage:', bodyJson.OrderID.toString());
+        } else {
+            console.warn('No OrderID in response:', bodyJson);
+            localStorage.setItem('orderError', 'No tracking number received from server');
         }
-        
-            // Clear cart and customer info
-            localStorage.removeItem('phoneShopCart');
-            localStorage.removeItem('customerInfo');
-        
-            // Add a small delay to ensure localStorage is updated before redirect
-            setTimeout(() => {
-                window.location.href = 'confirmation.html';
-            }, 100);
-        }
+
+        // Clear cart and stored info
+        localStorage.removeItem('phoneShopCart');
+        localStorage.removeItem('customerInfo');
+
+        // Redirect to confirmation page
+        window.location.replace('confirmation.html');
 
     } catch (error) {
         console.error('Payment processing error:', error);
-        alert('Error processing payment: ' + error.message);
+        localStorage.setItem('orderError', error.message);
+        window.location.replace('confirmation.html');
     }
 }
 
