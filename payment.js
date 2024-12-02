@@ -124,15 +124,16 @@ async function processPayment() {
         console.log('Parsed body data:', bodyData);
         
         if (bodyData.status === 'success') {
-            // Store the OrderID for confirmation page
+            // Store the OrderID for confirmation page BEFORE redirect
+            console.log('Storing tracking number:', bodyData.OrderID);
             localStorage.setItem('orderTrackingNumber', bodyData.OrderID.toString());
-            
+                    
             // Add OrderID and UserID from response to orderData
             orderData.OrderID = bodyData.OrderID;
             orderData.UserID = bodyData.UserID;
-            
+                    
             console.log('Sending notification for order:', orderData);
-            
+                    
             // Send email notification
             try {
                 const notificationResponse = await fetch('https://u1gir1ouw7.execute-api.us-east-1.amazonaws.com/prod/notify-order', {
@@ -144,22 +145,22 @@ async function processPayment() {
                         body: orderData  // Wrap in body property to match Lambda expectation
                     })
                 });
-                
+                        
                 const notifyResult = await notificationResponse.json();
                 console.log('Notification sent:', notifyResult);
             } catch (notifyError) {
                 console.error('Error sending notification:', notifyError);
                 // Continue with order confirmation even if notification fails
             }
-
+        
             // Clear cart and customer info
             localStorage.removeItem('phoneShopCart');
             localStorage.removeItem('customerInfo');
-
-            // Redirect to confirmation page
-            window.location.replace('confirmation.html');
-        } else {
-            throw new Error(bodyData.message || 'Order processing failed');
+        
+            // Add a small delay to ensure localStorage is updated before redirect
+            setTimeout(() => {
+                window.location.href = 'confirmation.html';
+            }, 100);
         }
 
     } catch (error) {
