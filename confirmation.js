@@ -1,41 +1,30 @@
-// confirmation.js
 document.addEventListener('DOMContentLoaded', () => {
-    console.log('Confirmation page loaded');
-    
-    // Get tracking number element
-    const trackingNumberElement = document.getElementById('trackingNumber');
-    console.log('Found tracking element:', trackingNumberElement);
-    
-    // Try to get the order tracking number from localStorage
-    const trackingNumber = localStorage.getItem('orderTrackingNumber');
-    console.log('Retrieved tracking number from localStorage:', trackingNumber);
-    
-    if (trackingNumber) {
-        // Display the tracking number
-        trackingNumberElement.textContent = trackingNumber;
-        // Add class to make tracking number stand out
-        trackingNumberElement.classList.add('tracking-number');
-        console.log('Set tracking number display to:', trackingNumber);
-    } else {
-        // Check if there was an error during order processing
+    console.log('Checking for tracking number...');
+    const trackingElement = document.getElementById('trackingNumber');
+    console.log('Found tracking element:', trackingElement);
+
+    if (trackingElement) {
+        // Get tracking number from localStorage
+        const trackingNumber = localStorage.getItem('orderTrackingNumber');
+        console.log('Retrieved tracking number from localStorage:', trackingNumber);
+
+        // Get any error message
         const orderError = localStorage.getItem('orderError');
         console.log('Order error from localStorage:', orderError);
-        if (orderError) {
-            trackingNumberElement.textContent = 'Error processing order: ' + orderError;
+
+        if (trackingNumber) {
+            trackingElement.textContent = trackingNumber;
+            // Clear the tracking number after displaying it
+            localStorage.removeItem('orderTrackingNumber');
+        } else if (orderError) {
+            trackingElement.textContent = 'Error: ' + orderError;
+            localStorage.removeItem('orderError');
         } else {
-            trackingNumberElement.textContent = 'Not available';
+            trackingElement.textContent = 'Not available';
         }
     }
-    
-    // Clean up localStorage
+
+    // Clear any remaining order data
     localStorage.removeItem('orderTrackingNumber');
     localStorage.removeItem('orderError');
-    
-    // Add event listener for "Return to Store" button
-    const returnButton = document.querySelector('button');
-    if (returnButton) {
-        returnButton.addEventListener('click', () => {
-            window.location.href = 'index.html';
-        });
-    }
 });
