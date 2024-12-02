@@ -124,17 +124,10 @@ async function processPayment() {
         console.log('Parsed body data:', bodyData);
         
         if (bodyData.status === 'success') {
-            // Store the OrderID for confirmation page BEFORE redirect
-            console.log('Storing tracking number:', bodyData.OrderID);
+            // Store OrderID first (this is what worked before)
             localStorage.setItem('orderTrackingNumber', bodyData.OrderID.toString());
-                    
-            // Add OrderID and UserID from response to orderData
-            orderData.OrderID = bodyData.OrderID;
-            orderData.UserID = bodyData.UserID;
-                    
-            console.log('Sending notification for order:', orderData);
-                    
-            // Send email notification
+        
+            // Add our new email notification
             try {
                 const notificationResponse = await fetch('https://u1gir1ouw7.execute-api.us-east-1.amazonaws.com/prod/notify-order', {
                     method: 'POST',
@@ -145,13 +138,18 @@ async function processPayment() {
                         body: orderData  // Wrap in body property to match Lambda expectation
                     })
                 });
-                        
-                const notifyResult = await notificationResponse.json();
-                console.log('Notification sent:', notifyResult);
+                
+                console.log('Notification sent:', await notificationResponse.json());
             } catch (notifyError) {
                 console.error('Error sending notification:', notifyError);
                 // Continue with order confirmation even if notification fails
             }
+        
+            // Keep your original cleanup and redirect (this worked before)
+            localStorage.removeItem('phoneShopCart');
+            localStorage.removeItem('customerInfo');
+            window.location.replace('confirmation.html');
+        }
         
             // Clear cart and customer info
             localStorage.removeItem('phoneShopCart');
