@@ -14,8 +14,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
         if (trackingNumber) {
             trackingElement.textContent = trackingNumber;
-            // Clear the tracking number after displaying it
-            localStorage.removeItem('orderTrackingNumber');
+            // Don't remove the tracking number yet
         } else if (orderError) {
             trackingElement.textContent = 'Error: ' + orderError;
             localStorage.removeItem('orderError');
@@ -24,7 +23,10 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
 
-    // Clear any remaining order data
-    localStorage.removeItem('orderTrackingNumber');
-    localStorage.removeItem('orderError');
+    // Only clear the tracking number after we're sure the page has loaded
+    // and the number has been displayed
+    setTimeout(() => {
+        localStorage.removeItem('orderTrackingNumber');
+        localStorage.removeItem('orderError');
+    }, 1000);
 });
