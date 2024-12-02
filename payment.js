@@ -70,6 +70,8 @@ async function checkInventoryAvailability(cart) {
     return true;
 }
 
+// In your payment.js, modify the processPayment function
+
 async function processPayment() {
     try {
         const form = document.getElementById('paymentForm');
@@ -103,46 +105,54 @@ async function processPayment() {
             OrderStatus: "Pending"
         };
 
-        console.log('Sending order data:', orderData);
-
-        // Submit order
+        // Submit order to existing endpoint
         const orderResponse = await fetch(ORDER_API_ENDPOINT, {
             method: 'POST',
             headers: {
-                'Content-Type': 'application/json',
-                'Origin': window.location.origin
+                'Content-Type': 'application/json'
             },
             body: JSON.stringify(orderData)
         });
-        
+
         const orderResult = await orderResponse.json();
-        console.log('Raw order result:', orderResult);
+        console.log('Order result:', orderResult);
         
-        // Parse the body string since it comes as a stringified JSON
-        const bodyJson = JSON.parse(orderResult.body);
-        console.log('Parsed body:', bodyJson);
+        // Parse the response
+        const bodyData = JSON.parse(orderResult.body);
         
-        // Check if OrderID exists in the parsed body
-        if (bodyJson && bodyJson.OrderID !== undefined) {
-            console.log('Found OrderID:', bodyJson.OrderID);
-            localStorage.setItem('orderTrackingNumber', bodyJson.OrderID.toString());
-            console.log('Saved tracking number to localStorage:', bodyJson.OrderID.toString());
+        if (bodyData.status === 'success') {
+            // Add OrderID from response to orderData
+            orderData.OrderID = bodyData.OrderID;
+            
+            // Send email notification
+            try {
+                const notificationResponse = await fetch('https://u1gir1ouw7.execute-api.us-east-1.amazonaws.com/prod/notify-order', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(orderData)
+                });
+                
+                console.log('Notification sent:', await notificationResponse.json());
+            } catch (notifyError) {
+                console.error('Error sending notification:', notifyError);
+                // Continue with order confirmation even if notification fails
+            }
+
+            // Clear cart and stored info
+            localStorage.removeItem('phoneShopCart');
+            localStorage.removeItem('customerInfo');
+
+            // Redirect to confirmation page
+            window.location.replace('confirmation.html');
         } else {
-            console.warn('No OrderID in response:', bodyJson);
-            localStorage.setItem('orderError', 'No tracking number received from server');
+            throw new Error('Order processing failed');
         }
-
-        // Clear cart and stored info
-        localStorage.removeItem('phoneShopCart');
-        localStorage.removeItem('customerInfo');
-
-        // Redirect to confirmation page
-        window.location.replace('confirmation.html');
 
     } catch (error) {
         console.error('Payment processing error:', error);
-        localStorage.setItem('orderError', error.message);
-        window.location.replace('confirmation.html');
+        alert('Error processing payment: ' + error.message);
     }
 }
 
