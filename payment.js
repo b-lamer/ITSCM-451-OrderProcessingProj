@@ -1,6 +1,6 @@
 // Constants
-const STOCK_API_ENDPOINT = 'https://u1gir1ouw7.execute-api.us-east-1.amazonaws.com/prod/check-stock';
-const ORDER_API_ENDPOINT = 'https://u1gir1ouw7.execute-api.us-east-1.amazonaws.com/prod/submit-order';
+const STOCK_API_ENDPOINT = '';
+const ORDER_API_ENDPOINT = '';
 
 // Load cart and customer data from localStorage
 function updateOrderSummary() {
