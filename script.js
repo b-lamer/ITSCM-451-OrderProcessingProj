@@ -1,5 +1,5 @@
 // Constants
-const API_ENDPOINT = 'https://u1gir1ouw7.execute-api.us-east-1.amazonaws.com/prod/check-stock';
+const API_ENDPOINT = '';
 const BASE_PRICES = {
     'iPhone': 999,
     'Samsung': 999,
